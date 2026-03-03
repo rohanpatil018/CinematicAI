@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  # ─── FastAPI Application ───
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinematch-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://cinematch:cinematch_secret@postgres:5432/cinematch_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - cinematch-network
+
+  # ─── Background Worker ───
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinematch-worker
+    command: ["python", "-m", "app.background.streaming_alert_worker"]
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://cinematch:cinematch_secret@postgres:5432/cinematch_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - cinematch-network
+
+  # ─── PostgreSQL ───
+  postgres:
+    image: postgres:16-alpine
+    container_name: cinematch-postgres
+    environment:
+      POSTGRES_USER: cinematch
+      POSTGRES_PASSWORD: cinematch_secret
+      POSTGRES_DB: cinematch_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinematch -d cinematch_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - cinematch-network
+
+  # ─── Redis ───
+  redis:
+    image: redis:7-alpine
+    container_name: cinematch-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - cinematch-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  cinematch-network:
+    driver: bridge

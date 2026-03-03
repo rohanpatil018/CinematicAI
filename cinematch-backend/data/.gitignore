@@ -1,0 +1,5 @@
+# This directory stores ML model artifacts.
+# Files are generated at runtime and should not be committed.
+*.bin
+*.pkl
+*_meta.pkl

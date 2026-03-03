@@ -1,0 +1,20 @@
+"""CineMatch AI Backend — Rate Limiting with SlowAPI."""
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+from app.core.config import get_settings
+
+settings = get_settings()
+
+# ─── Rate Limiter ───
+# Use in-memory storage for local dev, Redis for production
+_storage_uri = None
+if "redis" in settings.REDIS_URL and settings.ENVIRONMENT != "development":
+    _storage_uri = settings.REDIS_URL
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"],
+    storage_uri=_storage_uri,  # None = in-memory
+)
