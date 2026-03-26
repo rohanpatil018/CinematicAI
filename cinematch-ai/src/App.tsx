@@ -9,6 +9,8 @@ import Signup from "./pages/Signup";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import Discover from "./pages/Discover";
+import Results from "./pages/Results";
+import HiddenGems from "./pages/HiddenGems";
 import DNAProfile from "./pages/DNAProfile";
 import WatchTogether from "./pages/WatchTogether";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/hidden-gems" element={<HiddenGems />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="discover" element={<Discover />} />
